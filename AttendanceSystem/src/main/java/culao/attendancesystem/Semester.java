@@ -31,9 +31,24 @@ public class Semester implements Serializable {
         return courses.get(courseCode);
     }
     
+    public void removeCourse(String courseCode) {
+        if (courses != null) {
+            Course removed = courses.remove(courseCode);
+            if (removed != null) {
+                System.out.println("Removed course from semester: " + courseCode);
+            } else {
+                System.out.println("Course not found for removal in semester: " + courseCode);
+            }
+        }
+    }
+    
     public Collection<Course> getCourses() {
+    // Simply return the values (Course objects) from the map
+    if (courses != null) {
         return courses.values();
     }
+    return new ArrayList<>(); // Return an empty collection if courses map is null
+}
     
     // Getters
     public String getSemesterName() { return semesterName; }

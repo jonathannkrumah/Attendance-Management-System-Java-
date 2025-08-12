@@ -4,7 +4,14 @@
  */
 package culao.attendancesystem;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.*;
+
 
 /**
  *
@@ -18,21 +25,21 @@ public class Course implements Serializable {
     private int level;
     private List<Student> students;
     private Map<String, Map<Integer, Boolean>> attendance;
-    
+    private Set<Integer> lockedWeeks = new HashSet<>();
+
     public Course(String courseCode, String courseName, int level) {
         this.courseCode = courseCode;
         this.courseName = courseName;
         this.level = level;
         this.students = new ArrayList<>();
-        this.attendance = new HashMap<>(); // Initialize attendance map
+        this.attendance = new HashMap<>();
     }
     
     public void addStudent(Student student) {
         if (!students.contains(student)) {
             students.add(student);
-            if (!attendance.containsKey(student.getIndexNumber())) {
-                attendance.put(student.getIndexNumber(), new HashMap<>());
-            }
+            // Ensure an entry exists for the student in the attendance map
+            attendance.putIfAbsent(student.getIndexNumber(), new HashMap<>());
         }
     }
     
@@ -43,25 +50,62 @@ public class Course implements Serializable {
     
     public void markAttendance(String indexNumber, int week, boolean present) {
         // Ensure student exists in attendance map
-        if (!attendance.containsKey(indexNumber)) {
-            attendance.put(indexNumber, new HashMap<>());
-            System.out.println("Created new attendance record for student: " + indexNumber);
-        }
+        attendance.putIfAbsent(indexNumber, new HashMap<>());
         
-        // Mark the attendance
+        // Mark the attendance for the specific student and week
         attendance.get(indexNumber).put(week, present);
         System.out.println("MARKED ATTENDANCE: " + indexNumber + " Week " + week + " = " + present);
-        
-        // Verify it was set
-        Boolean check = attendance.get(indexNumber).get(week);
-        System.out.println("VERIFICATION: " + indexNumber + " Week " + week + " = " + check);
     }
     
     public Boolean getAttendance(String indexNumber, int week) {
+        // Check if student exists and if they have an entry for the week
         if (attendance.containsKey(indexNumber)) {
             return attendance.get(indexNumber).get(week);
         }
-        return null;
+        return null; // Student not found or no record for that week
+    }
+    
+    public void lockWeek(int week) {
+    if (week >= 1 && week <= 12) {
+        lockedWeeks.add(week);
+        System.out.println("LOCKED Week " + week + " for course " + this.getCourseCode());
+        }
+    }
+    
+     public boolean isWeekLocked(int week) {
+        boolean locked = lockedWeeks.contains(week);
+        System.out.println("Checking if Week " + week + " is locked for " + this.getCourseCode() + ": " + locked); // Debug print
+        return locked;
+    }
+    
+    public void unlockWeek(int week) {
+     if (week >= 1 && week <= 12) {
+        lockedWeeks.remove(week);
+        System.out.println("UNLOCKED Week " + week + " for course " + this.getCourseCode());
+        }
+    }
+    
+    void debugLoadedState() {
+    System.out.println("=== Course " + this.getCourseCode() + " Internal State After Load ===");
+    System.out.println("Students List Size: " + (this.students != null ? this.students.size() : "NULL"));
+    if (this.students != null) {
+        for (Student s : this.students) {
+            System.out.println("  Student in list: " + s.getIndexNumber() + " (" + s.getName() + ")");
+        }
+    }
+    System.out.println("Attendance Map Size: " + (this.attendance != null ? this.attendance.size() : "NULL"));
+    if (this.attendance != null) {
+        for (Map.Entry<String, Map<Integer, Boolean>> entry : this.attendance.entrySet()) {
+            System.out.println("  Attendance entry for Index: " + entry.getKey() + " -> Data Map: " + entry.getValue() + " (Size: " + (entry.getValue() != null ? entry.getValue().size() : "NULL") + ")");
+        }
+    }
+    System.out.println("Locked Weeks Set: " + (this.lockedWeeks != null ? this.lockedWeeks : "NULL"));
+    System.out.println("===================================================================");
+}
+    
+    public Set<Integer> getLockedWeeks() {
+    // Return a copy to prevent external modification of the internal set
+    return new HashSet<>(lockedWeeks);
     }
     
     // Getters
@@ -69,7 +113,9 @@ public class Course implements Serializable {
     public String getCourseName() { return courseName; }
     public int getLevel() { return level; }
     public List<Student> getStudents() { return students; }
-    public Map<String, Map<Integer, Boolean>> getAttendance() { return attendance; }
+    
+    // Consider returning a copy or specific data if needed elsewhere.
+    public Map<String, Map<Integer, Boolean>> getAttendance() { return attendance; } 
     
     public void setLevel(int level) { this.level = level; }
     
@@ -78,3 +124,4 @@ public class Course implements Serializable {
         return courseCode + " - " + courseName + " (Level " + level + ")";
     }
 }
+    
